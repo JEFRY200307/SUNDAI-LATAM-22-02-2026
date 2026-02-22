@@ -12,10 +12,10 @@ const DEMO_ACCOUNTS = [
 export default function TransactionForm({ onResult, onLoading }) {
     const [form, setForm] = useState({
         sender_account: 'ACC-SENDER-001',
-        receiver_account: 'ACC-NORMAL-001',
-        amount: 500,
+        receiver_account: 'ACC-BLOCKED-001',
+        amount: 2000,
         currency: 'USD',
-        ip_address: '',
+        ip_address: '185.220.101.1',
         user_agent: navigator.userAgent,
     })
 
@@ -23,13 +23,30 @@ export default function TransactionForm({ onResult, onLoading }) {
         e.preventDefault()
         onLoading(true)
         try {
+            // Generate random historical amounts (5–10 past transactions)
+            const historyLen = Math.floor(Math.random() * 6) + 5
+            const historical_amounts = Array.from({ length: historyLen }, () =>
+                Math.round((Math.random() * 2950 + 50) * 100) / 100
+            )
+
             const payload = {
                 ...form,
                 amount: parseFloat(form.amount),
                 transaction_id: `TXN-${Date.now()}`,
                 device_id: `DEV-${navigator.userAgent.length}-${Date.now()}`,
+                user_agent: navigator.userAgent,
+                // Device signals (Rol 3)
+                is_emulator: true,
+                is_rooted: true,
+                anomalous_ip_flag: true,
+                // Behavioral signals (Rol 3)
+                interaction_time_ms: Math.floor(Math.random() * 25000) + 3000,
+                navigation_steps: Math.floor(Math.random() * 8) + 2,
+                historical_amounts,
             }
+            console.log('📤 [REQUEST] /analyze payload:', JSON.stringify(payload, null, 2))
             const result = await analyzeTransaction(payload)
+            console.log('📥 [RESPONSE] /analyze result:', JSON.stringify(result, null, 2))
             onResult(result)
         } catch (err) {
             console.error('Error al analizar transacción:', err)

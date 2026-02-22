@@ -15,25 +15,19 @@ const designerNotes = {
     transaction: {
         title: "Análisis de Riesgo (Motor de Reglas)",
         trigger: "Transferencia inusual (Monto alto, dispositivo nuevo o IP riesgosa).",
-        escalation: "Escala a Step-up Authentication (Nivel 1).",
+        escalation: "Escala a Verificación Biométrica.",
         uxFocus: "Fricción cero hasta que se detecta la anomalía."
-    },
-    step_up: {
-        title: "Step-up Authentication",
-        trigger: "Riesgo Medio/Alto detectado.",
-        escalation: "Si falla 2 veces o el riesgo contextual aumenta -> Escala a Biometría.",
-        uxFocus: "Transparencia: Explicar *por qué* pedimos un código extra (Proteger sus fondos)."
     },
     biometric: {
         title: "BiometricVerifier (Liveness Activo)",
-        trigger: "Riesgo Alto o fallo en Step-up.",
-        escalation: "Si la biometría es dudosa (Deepfake score alto, poca luz) -> Escala a Voice Bot.",
+        trigger: "Riesgo detectado en la transacción.",
+        escalation: "Si pasa → Llamada de verificación. Si falla → Transacción rechazada.",
         uxFocus: "Instrucciones claras para pruebas de vida (sonreír, girar la cabeza) reduciendo la ansiedad."
     },
     voice_bot: {
         title: "HITL CallAgent (Voice Bot)",
-        trigger: "Riesgo Crítico, biometría fallida, o sospecha de fraude en progreso (Scam).",
-        escalation: "Si detecta estrés en la voz, input inválido, o el usuario usa la palabra de seguridad -> Escala a Humano.",
+        trigger: "Biometría verificada exitosamente, pero riesgo sigue alto.",
+        escalation: "Si detecta estrés en la voz, input inválido, o el usuario usa la palabra de seguridad → Escala a Humano.",
         uxFocus: "Tono calmado, opciones claras. Diseño Anti-Coerción integrado."
     },
     human_agent: {
@@ -47,6 +41,12 @@ const designerNotes = {
         trigger: "El usuario activó el protocolo Anti-Coerción durante la llamada.",
         escalation: "Simular éxito de transferencia para engañar al atacante, pero retener fondos y notificar autoridades/equipo de fraude.",
         uxFocus: "Proteger la integridad física del usuario."
+    },
+    rejected: {
+        title: "Transacción Rechazada",
+        trigger: "Fallo en verificación biométrica.",
+        escalation: "Ninguna. Fondos protegidos.",
+        uxFocus: "Comunicar de forma clara y ofrecer alternativas (contactar al banco)."
     },
     success: {
         title: "Verificación Exitosa",
@@ -84,48 +84,7 @@ function StepTransaction({ result }) {
     )
 }
 
-function StepUpAuth({ onNext }) {
-    return (
-        <div className="flex flex-col h-full p-6">
-            <div className="bg-blue-50 p-4 rounded-xl mb-6 flex items-start gap-3 mt-4">
-                <Info className="w-6 h-6 text-blue-600 shrink-0 mt-0.5" />
-                <div>
-                    <h3 className="text-sm font-semibold text-blue-900">Protegiendo tu dinero</h3>
-                    <p className="text-xs text-blue-700 mt-1">
-                        Detectamos una transferencia inusual por el monto. Para tu seguridad, verifiquemos que eres tú.
-                    </p>
-                </div>
-            </div>
-            <div className="text-center mb-8">
-                <Lock className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                <h2 className="text-xl font-bold text-slate-800">Código de Seguridad</h2>
-                <p className="text-slate-500 text-sm mt-2">Enviado a tu dispositivo principal</p>
-            </div>
-            <div className="flex justify-between gap-2 mb-8">
-                {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={i} className="w-10 h-12 border-2 border-slate-200 rounded-lg flex items-center justify-center text-xl font-bold text-slate-400">
-                        •
-                    </div>
-                ))}
-            </div>
-            <div className="mt-auto flex flex-col gap-3">
-                <button
-                    onClick={() => onNext('success')}
-                    className="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-semibold hover:bg-slate-200 transition-colors"
-                >
-                    Simular: Código Correcto ✅
-                </button>
-                <button
-                    onClick={() => onNext('biometric')}
-                    className="w-full bg-orange-100 text-orange-700 py-3 rounded-xl font-semibold hover:bg-orange-200 transition-colors border border-orange-200 flex items-center justify-center gap-2"
-                >
-                    <TriangleAlert className="w-4 h-4" />
-                    Simular: Fallo / Timeout (Escalar)
-                </button>
-            </div>
-        </div>
-    )
-}
+// StepUpAuth removed — flow goes directly to biometric
 
 function StepBiometric({ onNext }) {
     const videoRef = useRef(null)
@@ -174,17 +133,17 @@ function StepBiometric({ onNext }) {
             </div>
             <div className="p-6 flex flex-col gap-3 bg-slate-900 z-10">
                 <button
-                    onClick={() => onNext('success')}
+                    onClick={() => onNext('voice_bot')}
                     className="w-full bg-slate-800 text-white py-3 rounded-xl font-semibold hover:bg-slate-700 transition-colors border border-slate-700"
                 >
-                    Simular: Liveness Exitoso ✅
+                    Simular: Biometría Exitosa ✅ (Ir a Llamada)
                 </button>
                 <button
-                    onClick={() => onNext('voice_bot')}
+                    onClick={() => onNext('rejected')}
                     className="w-full bg-red-900/40 text-red-400 py-3 rounded-xl font-semibold hover:bg-red-900/60 transition-colors border border-red-800/50 flex items-center justify-center gap-2"
                 >
                     <ShieldAlert className="w-4 h-4" />
-                    Simular: Duda/Fallo (Escalar a Llamada)
+                    Simular: Fallo Biométrico (Rechazar)
                 </button>
             </div>
         </div>
@@ -198,7 +157,7 @@ function StepVoiceBot() {
                 <div className="w-24 h-24 bg-blue-600/20 rounded-full flex items-center justify-center mb-6 animate-pulse">
                     <PhoneCall className="w-10 h-10 text-blue-400" />
                 </div>
-                <h2 className="text-2xl font-bold mb-1">SecureBank Bot</h2>
+                <h2 className="text-2xl font-bold mb-1">SecureBank</h2>
                 <p className="text-slate-400 mb-8">Llamada de Seguridad en curso...</p>
                 <div className="w-full max-w-[280px] bg-slate-800 p-4 rounded-2xl border border-slate-700 relative">
                     <p className="text-sm text-slate-300 italic">
@@ -260,6 +219,23 @@ function StepSuccess({ onReset }) {
     )
 }
 
+function StepRejected({ onReset }) {
+    return (
+        <div className="flex flex-col h-full bg-red-50 justify-center items-center p-6 text-center pt-10">
+            <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mb-6">
+                <CircleX className="w-12 h-12 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Transacción Rechazada</h2>
+            <p className="text-slate-600 mb-8">
+                No pudimos verificar tu identidad. Por tu seguridad, la transferencia ha sido cancelada. Si crees que es un error, contacta a tu banco.
+            </p>
+            <button onClick={onReset} className="mt-auto bg-red-600 text-white w-full py-4 rounded-xl font-semibold hover:bg-red-700 transition-colors">
+                Volver al Inicio
+            </button>
+        </div>
+    )
+}
+
 function StepSilentAlarm() {
     return (
         <div className="flex flex-col h-full bg-slate-50 justify-center items-center p-6 text-center pt-10">
@@ -305,19 +281,19 @@ export default function TrustFlowSystem({ result, onBack }) {
 
     const resetFlow = () => {
         if (onBack) onBack()
-        else setCurrentStep('step_up')
+        else setCurrentStep('biometric')
     }
 
     const renderPhoneUI = () => {
         switch (currentStep) {
             case 'transaction': return <StepTransaction result={result} />
-            case 'step_up': return <StepUpAuth onNext={setCurrentStep} />
             case 'biometric': return <StepBiometric onNext={setCurrentStep} />
             case 'voice_bot': return <StepVoiceBot />
             case 'human_agent': return <StepHumanAgent />
             case 'success': return <StepSuccess onReset={resetFlow} />
+            case 'rejected': return <StepRejected onReset={resetFlow} />
             case 'silent_alarm': return <StepSilentAlarm />
-            default: return <StepTransaction result={result} />
+            default: return <StepBiometric onNext={setCurrentStep} />
         }
     }
 
@@ -327,7 +303,7 @@ export default function TrustFlowSystem({ result, onBack }) {
         : currentStep === 'biometric' ? 'Alto' : 'Medio'
 
     const stepsReached = (step) => {
-        const order = ['transaction', 'step_up', 'biometric', 'voice_bot', 'human_agent']
+        const order = ['transaction', 'biometric', 'voice_bot', 'human_agent']
         const idx = order.indexOf(step)
         const curIdx = order.indexOf(currentStep)
         return curIdx >= idx
@@ -459,8 +435,8 @@ export default function TrustFlowSystem({ result, onBack }) {
                         <div>
                             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Escalera de Fricción</h3>
                             <div className="flex items-center justify-between text-xs font-bold text-slate-400">
-                                {['transaction', 'step_up', 'biometric', 'voice_bot', 'human_agent'].map((step, i, arr) => {
-                                    const labels = ['Transacción', 'Step-up', 'Biometría', 'Voice Bot', 'Humano']
+                                {['transaction', 'biometric', 'voice_bot', 'human_agent'].map((step, i, arr) => {
+                                    const labels = ['Transacción', 'Biometría', 'Voice Bot', 'Humano']
                                     const reached = stepsReached(step)
                                     const color = (step === 'voice_bot' || step === 'human_agent')
                                         ? 'text-red-500'

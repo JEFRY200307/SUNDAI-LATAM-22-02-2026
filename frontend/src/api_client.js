@@ -35,18 +35,13 @@ export async function analyzeTransaction(transactionData) {
  * @returns {string} Trust Flow step name
  */
 export function mapResultToStep(result) {
-    if (!result || result.error) return 'step_up'
+    if (!result || result.error) return 'biometric'
 
     if (result.decision === 'NO_FRAUD') return 'success'
+    if (result.decision === 'FRAUD') return 'rejected'
 
-    switch (result.hitl_action) {
-        case 'STEP_UP_AUTH_OTP':
-            return 'step_up'
-        case 'TRANSACTION_BLOCKED_VOICE_BOT':
-            return 'voice_bot'
-        default:
-            return 'step_up'
-    }
+    // POSSIBLE_FRAUD → biometric verification
+    return 'biometric'
 }
 
 /**
