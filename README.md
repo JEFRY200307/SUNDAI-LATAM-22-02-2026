@@ -190,3 +190,38 @@ docker run -p 8000:8000 antifraud-backend
 ## 📄 Licencia
 
 Proyecto desarrollado en el marco del Hackathon **SUNDAI LATAM · 22 de febrero de 2026**.
+
+
+graph TD
+    %% Nodos
+    User((Usuario))
+    TxForm[Formulario de Transacción]
+    RiskEngine{Motor de Análisis de Riesgo}
+    Biometria[Verificación Biométrica Activa]
+    HITL[Human in the Loop<br/>Llamada de Seguridad]
+    TxRechazada((Transacción Rechazada))
+    TxExitosa((Transacción Exitosa))
+
+    %% Relaciones
+    User -->|Inicia transferencia| TxForm
+    TxForm -->|Envía payload| RiskEngine
+
+    RiskEngine -->|Riesgo Alto| Biometria
+    RiskEngine -.->|Riesgo Bajo<br/>(Flujo Normal)| TxExitosa
+    RiskEngine -.->|Fraude Evidente| TxRechazada
+
+    Biometria -->|Reconocimiento Fallido| TxRechazada
+    Biometria -->|Reconocimiento Exitoso| HITL
+
+    HITL -->|Botón INCORRECTO| TxRechazada
+    HITL -->|Botón CORRECTO| TxExitosa
+
+    %% Estilos (Opcional para que se vea mejor)
+    style User fill:#e2e8f0,stroke:#64748b,color:#0f172a
+    style TxForm fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+    style RiskEngine fill:#fef08a,stroke:#eab308,color:#854d0e
+    style Biometria fill:#fed7aa,stroke:#f97316,color:#9a3412
+    style HITL fill:#bfdbfe,stroke:#3b82f6,color:#1e3a8a,stroke-width:3px
+    style TxRechazada fill:#fecaca,stroke:#ef4444,color:#7f1d1d
+    style TxExitosa fill:#bbf7d0,stroke:#22c55e,color:#14532d
+
