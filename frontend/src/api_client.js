@@ -7,22 +7,46 @@ const api = axios.create({
     headers: { 'Content-Type': 'application/json' },
 })
 
+// ─── Trust Flow API ──────────────────────────────────────────────────────────
+// Adapted to the existing backend endpoints: POST /analyze and GET /health.
+// The Trust Flow logic (step-up, biometric, voice-bot, etc.) is driven
+// by the backend's `decision` and `hitl_action` fields in the /analyze response.
+
 /**
  * Envía un TransactionIntent al backend y retorna el TransactionResult.
+ * The backend returns: { decision, risk_score, signals, hitl_triggered, hitl_action }
+ *
+ * Frontend maps hitl_action to Trust Flow steps:
+ *   - "STEP_UP_AUTH_OTP"              → step_up
+ *   - "TRANSACTION_BLOCKED_VOICE_BOT" → voice_bot
+ *   - null (NO_FRAUD)                 → success
+ *
  * @param {Object} transactionData
- * @param {string} transactionData.transaction_id
- * @param {string} transactionData.sender_account
- * @param {string} transactionData.receiver_account
- * @param {number} transactionData.amount
- * @param {string} [transactionData.currency]
- * @param {string} [transactionData.device_id]
- * @param {string} [transactionData.ip_address]
- * @param {string} [transactionData.user_agent]
  * @returns {Promise<Object>} TransactionResult
  */
 export async function analyzeTransaction(transactionData) {
     const response = await api.post('/analyze', transactionData)
     return response.data
+}
+
+/**
+ * Maps the backend hitl_action to a Trust Flow step name.
+ * @param {Object} result - TransactionResult from /analyze
+ * @returns {string} Trust Flow step name
+ */
+export function mapResultToStep(result) {
+    if (!result || result.error) return 'step_up'
+
+    if (result.decision === 'NO_FRAUD') return 'success'
+
+    switch (result.hitl_action) {
+        case 'STEP_UP_AUTH_OTP':
+            return 'step_up'
+        case 'TRANSACTION_BLOCKED_VOICE_BOT':
+            return 'voice_bot'
+        default:
+            return 'step_up'
+    }
 }
 
 /**
