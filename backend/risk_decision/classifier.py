@@ -57,3 +57,39 @@ def classify_risk(
         decision = "NO_FRAUD"
 
     return risk_score, decision
+
+
+# ─── LangGraph Node Wrapper ───────────────────────────────────────────────────
+
+def risk_engine_node(state: dict) -> dict:
+    """Nodo LangGraph: consolida señales y calcula risk score + factores."""
+    tx = state.get("transaction", {})
+    device_signals = state.get("device_signals", {})
+    mule_score = state.get("mule_score", 0.0)
+
+    risk_score, _ = classify_risk(
+        amount=tx.get("amount", 0.0),
+        device_signals=device_signals,
+        mule_score=mule_score,
+    )
+
+    # Recopilar factores de riesgo activos
+    risk_factors = []
+    amount = tx.get("amount", 0.0)
+    if amount > 10_000:
+        risk_factors.append("high_amount")
+    elif amount > 3_000:
+        risk_factors.append("medium_amount")
+    if mule_score > 0.5:
+        risk_factors.append("mule_score")
+    if device_signals.get("is_emulator"):
+        risk_factors.append("emulator")
+    if device_signals.get("anomalous_ip"):
+        risk_factors.append("anomalous_ip")
+    if device_signals.get("suspicious_typing_speed"):
+        risk_factors.append("suspicious_typing")
+
+    return {
+        "risk_score": min(risk_score, 1.0),
+        "risk_factors": risk_factors,
+    }

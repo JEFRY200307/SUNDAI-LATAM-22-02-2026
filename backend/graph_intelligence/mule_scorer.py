@@ -37,3 +37,12 @@ def score_mule_risk(receiver_account: str) -> float:
         return 1.0
 
     return KNOWN_MULE_NETWORK.get(receiver_account, 0.0)
+
+
+# ─── LangGraph Node Wrapper ───────────────────────────────────────────────────
+
+def mule_scoring_node(state: dict) -> dict:
+    """Nodo LangGraph: calcula el mule risk score de la cuenta destino."""
+    tx = state.get("transaction", {})
+    score = score_mule_risk(receiver_account=tx.get("receiver_account", ""))
+    return {"mule_score": score}

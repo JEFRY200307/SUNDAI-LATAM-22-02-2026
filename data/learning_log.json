@@ -1,1 +1,194 @@
-[]
+[
+  {
+    "transaction_id": "TXN-1771789751282",
+    "risk_score": 0.0,
+    "decision": "NO_FRAUD",
+    "risk_factors": [],
+    "signals": {
+      "device": {
+        "is_emulator": false,
+        "anomalous_ip": false,
+        "suspicious_typing_speed": false,
+        "device_fingerprint": "4799dc47ec16c253"
+      },
+      "mule_score": 0.0
+    },
+    "hitl_triggered": false,
+    "hitl_action": null,
+    "explanation": "Decisi\u00f3n: NO_FRAUD (score 0.00)\nFactores de riesgo detectados:\n  \u2022 Ning\u00fan factor de riesgo significativo.\nEsta evaluaci\u00f3n fue generada autom\u00e1ticamente por el motor de riesgo.",
+    "timestamp": "2026-02-22T19:49:11.429053"
+  },
+  {
+    "transaction_id": "TXN-1771789754815",
+    "risk_score": 0.21,
+    "decision": "NO_FRAUD",
+    "risk_factors": [
+      "mule_score"
+    ],
+    "signals": {
+      "device": {
+        "is_emulator": false,
+        "anomalous_ip": false,
+        "suspicious_typing_speed": false,
+        "device_fingerprint": "4e7159b1c14f3751"
+      },
+      "mule_score": 0.6
+    },
+    "hitl_triggered": false,
+    "hitl_action": null,
+    "explanation": "Decisi\u00f3n: NO_FRAUD (score 0.21)\nFactores de riesgo detectados:\n  \u2022 Cuenta destino asociada a red de mulas\nEsta evaluaci\u00f3n fue generada autom\u00e1ticamente por el motor de riesgo.",
+    "timestamp": "2026-02-22T19:49:14.864413"
+  },
+  {
+    "transaction_id": "TXN-1771789762017",
+    "risk_score": 0.3325,
+    "decision": "NO_FRAUD",
+    "risk_factors": [
+      "mule_score"
+    ],
+    "signals": {
+      "device": {
+        "is_emulator": false,
+        "anomalous_ip": false,
+        "suspicious_typing_speed": false,
+        "device_fingerprint": "37aafa3e9a9f73dd"
+      },
+      "mule_score": 0.95
+    },
+    "hitl_triggered": false,
+    "hitl_action": null,
+    "explanation": "Decisi\u00f3n: NO_FRAUD (score 0.33)\nFactores de riesgo detectados:\n  \u2022 Cuenta destino asociada a red de mulas\nEsta evaluaci\u00f3n fue generada autom\u00e1ticamente por el motor de riesgo.",
+    "timestamp": "2026-02-22T19:49:22.052478"
+  },
+  {
+    "transaction_id": "TXN-1771789764499",
+    "risk_score": 0.45,
+    "decision": "NO_FRAUD",
+    "risk_factors": [
+      "mule_score",
+      "suspicious_typing"
+    ],
+    "signals": {
+      "device": {
+        "is_emulator": false,
+        "anomalous_ip": false,
+        "suspicious_typing_speed": true,
+        "device_fingerprint": "98f321f6040b2679"
+      },
+      "mule_score": 1.0
+    },
+    "hitl_triggered": false,
+    "hitl_action": null,
+    "explanation": "Decisi\u00f3n: NO_FRAUD (score 0.45)\nFactores de riesgo detectados:\n  \u2022 Cuenta destino asociada a red de mulas\n  \u2022 Velocidad de tipeo rob\u00f3tica o sospechosa\nEsta evaluaci\u00f3n fue generada autom\u00e1ticamente por el motor de riesgo.",
+    "timestamp": "2026-02-22T19:49:24.532800"
+  },
+  {
+    "transaction_id": "TXN-1771789766715",
+    "risk_score": 0.31,
+    "decision": "NO_FRAUD",
+    "risk_factors": [
+      "mule_score",
+      "suspicious_typing"
+    ],
+    "signals": {
+      "device": {
+        "is_emulator": false,
+        "anomalous_ip": false,
+        "suspicious_typing_speed": true,
+        "device_fingerprint": "861286d477a81c17"
+      },
+      "mule_score": 0.6
+    },
+    "hitl_triggered": false,
+    "hitl_action": null,
+    "explanation": "Decisi\u00f3n: NO_FRAUD (score 0.31)\nFactores de riesgo detectados:\n  \u2022 Cuenta destino asociada a red de mulas\n  \u2022 Velocidad de tipeo rob\u00f3tica o sospechosa\nEsta evaluaci\u00f3n fue generada autom\u00e1ticamente por el motor de riesgo.",
+    "timestamp": "2026-02-22T19:49:26.745321"
+  },
+  {
+    "transaction_id": "TXN-1771791799656",
+    "risk_score": 0.21,
+    "decision": "NO_FRAUD",
+    "risk_factors": [
+      "mule_score"
+    ],
+    "signals": {
+      "device": {
+        "is_emulator": false,
+        "anomalous_ip": false,
+        "suspicious_typing_speed": false,
+        "device_fingerprint": "98a999d4d4317143"
+      },
+      "mule_score": 0.6
+    },
+    "hitl_triggered": false,
+    "hitl_action": null,
+    "explanation": "Decisi\u00f3n: NO_FRAUD (score 0.21)\nFactores de riesgo detectados:\n  \u2022 Cuenta destino asociada a red de mulas\nEsta evaluaci\u00f3n fue generada autom\u00e1ticamente por el motor de riesgo.",
+    "timestamp": "2026-02-22T20:23:19.817881"
+  },
+  {
+    "transaction_id": "TXN-1771792250438",
+    "risk_score": 0.21,
+    "decision": "NO_FRAUD",
+    "risk_factors": [
+      "mule_score"
+    ],
+    "signals": {
+      "device": {
+        "is_emulator": false,
+        "anomalous_ip": false,
+        "suspicious_typing_speed": false,
+        "device_fingerprint": "ed0ed200c4375763"
+      },
+      "mule_score": 0.6
+    },
+    "hitl_triggered": false,
+    "hitl_action": null,
+    "explanation": "Decisi\u00f3n: NO_FRAUD (score 0.21)\nFactores de riesgo detectados:\n  \u2022 Cuenta destino asociada a red de mulas\nEsta evaluaci\u00f3n fue generada autom\u00e1ticamente por el motor de riesgo.",
+    "timestamp": "2026-02-22T20:30:50.597084"
+  },
+  {
+    "transaction_id": "TXN-1771792374009",
+    "risk_score": 0.4325,
+    "decision": "NO_FRAUD",
+    "risk_factors": [
+      "mule_score",
+      "suspicious_typing"
+    ],
+    "signals": {
+      "device": {
+        "is_emulator": false,
+        "anomalous_ip": false,
+        "suspicious_typing_speed": true,
+        "device_fingerprint": "af75b3b77881817c"
+      },
+      "mule_score": 0.95
+    },
+    "hitl_triggered": false,
+    "hitl_action": null,
+    "explanation": "Decisi\u00f3n: NO_FRAUD (score 0.43)\nFactores de riesgo detectados:\n  \u2022 Cuenta destino asociada a red de mulas\n  \u2022 Velocidad de tipeo rob\u00f3tica o sospechosa\nEsta evaluaci\u00f3n fue generada autom\u00e1ticamente por el motor de riesgo.",
+    "timestamp": "2026-02-22T20:32:54.074356"
+  },
+  {
+    "transaction_id": "TEST-TRACE-001",
+    "risk_score": 0.5825,
+    "decision": "POSSIBLE_FRAUD",
+    "risk_factors": [
+      "medium_amount",
+      "mule_score",
+      "anomalous_ip"
+    ],
+    "signals": {
+      "device": {
+        "is_emulator": false,
+        "anomalous_ip": true,
+        "suspicious_typing_speed": false,
+        "device_fingerprint": "b23a6a8439c0dde5"
+      },
+      "mule_score": 0.95
+    },
+    "hitl_triggered": true,
+    "hitl_action": "STEP_UP_AUTH_OTP",
+    "explanation": "La transacci\u00f3n TEST-TRACE-001 ha sido identificada como posible fraude, con un score de riesgo de 0.5825. Esto indica que, aunque no hay certeza absoluta, existen varios factores que sugieren que la transacci\u00f3n puede ser sospechosa y requiere una revisi\u00f3n m\u00e1s detallada.\n\nLos factores de riesgo principales que han llevado a esta decisi\u00f3n son el monto medio de la transacci\u00f3n, el alto score de mula (0.95) y la direcci\u00f3n IP an\u00f3mala utilizada para realizar la transacci\u00f3n. El score de mula alto sugiere que la cuenta destino, ACC-MULE-001, puede estar siendo utilizada para recibir fondos de manera fraudulenta. Adem\u00e1s, la direcci\u00f3n IP an\u00f3mala puede indicar que la transacci\u00f3n se est\u00e1 realizando desde un dispositivo o ubicaci\u00f3n inusual.\n\nSe recomienda revisar detalladamente la transacci\u00f3n y considerar tomar medidas para verificar la autenticidad de la misma. Esto puede incluir contactar al titular de la cuenta origen, USER-001, para confirmar que la transacci\u00f3n fue realizada de manera leg\u00edtima, as\u00ed como investigar m\u00e1s a fondo la cuenta destino y su historial de transacciones. Tambi\u00e9n es importante considerar la posibilidad de congelar o revertir la transacci\u00f3n hasta que se pueda determinar su legitimidad.",
+    "timestamp": "2026-02-22T20:37:38.914328"
+  }
+]

@@ -64,3 +64,16 @@ def _simulate_typing_anomaly(device_id: str | None) -> bool:
 
 def _generate_fingerprint(device_id: str) -> str:
     return hashlib.sha256(device_id.encode()).hexdigest()[:16]
+
+
+# ─── LangGraph Node Wrapper ───────────────────────────────────────────────────
+
+def device_signals_node(state: dict) -> dict:
+    """Nodo LangGraph: extrae señales de dispositivo de la transacción."""
+    tx = state.get("transaction", {})
+    signals = get_device_signals(
+        device_id=tx.get("device_id"),
+        ip_address=tx.get("ip_address"),
+        user_agent=tx.get("user_agent"),
+    )
+    return {"device_signals": signals}

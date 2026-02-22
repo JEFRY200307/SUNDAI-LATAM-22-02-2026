@@ -39,3 +39,15 @@ def _trigger_voice_bot():
     """Importa y ejecuta el voice bot de forma inline."""
     from backend.hitl_trust.voice_bot import run_voice_bot
     run_voice_bot()
+
+
+# ─── LangGraph Node Wrapper ───────────────────────────────────────────────────
+
+def hitl_node(state: dict) -> dict:
+    """Nodo LangGraph: dispara verificación HITL según la decisión."""
+    decision = state.get("decision", "NO_FRAUD")
+    action = trigger_verification(decision=decision)
+    return {
+        "hitl_triggered": True,
+        "hitl_action": action,
+    }
