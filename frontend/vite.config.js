@@ -14,6 +14,8 @@ export default defineConfig({
       '/graph': 'http://localhost:8000',
       '/config': 'http://localhost:8000',
       '/feedback': 'http://localhost:8000',
+      '/hitl': 'http://localhost:8000',
+      '/report': 'http://localhost:8000',
     },
   },
 })

@@ -1,21 +1,28 @@
 """
-Grafo LangGraph — Pipeline de Detección de Fraude
+Grafo LangGraph — Pipeline de Detección de Fraude (3 Nodos)
 
-START ──┬──► device_signals (Rol 3) ──┐
-        └──► mule_scoring  (Rol 2) ──┤
-                                      ├──► risk_engine (Rol 1)
-                                      │         │
-                                      │   decision_policy
-                                      │    ╱          ╲
-                                   FRAUD/POSSIBLE    NO_FRAUD
-                                      │                │
-                                   hitl_verify         │
-                                      │                │
-                                      └───► xai_explain ◄──┘
-                                               │
-                                          memory_write
-                                               │
-                                              END
+       ┌──────────────────────────────────────────────────────────┐
+       │                                                          │
+   START → enrichment_node (A) → reasoning_node (B/LLM)         │
+              │                       │                           │
+              │             ┌─────────┼────────────┐              │
+              │             │         │            │              │
+              │           BAJO      MEDIO        ALTO             │
+              │             │         │            │              │
+              │        approve    facial_rec    action (C)        │
+              │                      │                            │
+              │               ┌──────┴──────┐                    │
+              │               │             │                    │
+              │          no pasa          pasa                   │
+              │               │             │                    │
+              │           action(C)     voice_bot                │
+              │                        ┌────┴────┐               │
+              │                        │         │               │
+              │                   no confirma  confirma           │
+              │                        │         │               │
+              │                    action(C)  approve             │
+              └──────────────────────────────────────────────────┘
+                                     ↓ END
 """
 import json
 import os
@@ -28,46 +35,58 @@ from backend.schemas import AgentState
 # ─── Importar nodos ───────────────────────────────────────────────────────────
 from backend.behavioral_device.telemetry import device_signals_node
 from backend.graph_intelligence.mule_scorer import mule_scoring_node
-from backend.risk_decision.classifier import risk_engine_node
-from backend.hitl_trust.verification import hitl_node
-from backend.risk_decision.xai_explainer import xai_explain_node
+from backend.risk_decision.classifier import reasoning_node
+from backend.hitl_trust.facial_recognition import facial_recognition_node
+from backend.hitl_trust.verification import voice_bot_node
+from backend.risk_decision.report_generator import action_node, approve_node
 
 
-# ─── Nodos auxiliares ─────────────────────────────────────────────────────────
+# ─── Nodo A: Enriquecimiento ─────────────────────────────────────────────────
 
-def decision_policy_node(state: dict) -> dict:
-    """Clasifica la decisión a partir del risk_score y los umbrales."""
-    risk_score = state.get("risk_score", 0.0)
-    t_fraud = float(os.getenv("RISK_THRESHOLD_FRAUD", "0.75"))
-    t_possible = float(os.getenv("RISK_THRESHOLD_POSSIBLE", "0.45"))
+def enrichment_node(state: dict) -> dict:
+    """
+    Nodo A: Recolecta TODAS las señales de identidad y comportamiento.
+    Ejecuta device_signals + mule_scoring en un solo nodo.
+    """
+    # Device + behavioral signals
+    device_result = device_signals_node(state)
+    mule_result = mule_scoring_node(state)
 
-    if risk_score >= t_fraud:
-        decision = "FRAUD"
-    elif risk_score >= t_possible:
-        decision = "POSSIBLE_FRAUD"
-    else:
-        decision = "NO_FRAUD"
+    # Consolidar
+    return {
+        "device_signals": device_result["device_signals"],
+        "mule_score": mule_result["mule_score"],
+        "enrichment_summary": {
+            "device_signals": device_result["device_signals"],
+            "mule_score": mule_result["mule_score"],
+        },
+    }
 
-    return {"decision": decision}
 
+# ─── Nodo terminal: escritura en log ─────────────────────────────────────────
 
 def memory_write_node(state: dict) -> dict:
     """Persiste el resultado en el log de aprendizaje continuo."""
     log_path = os.getenv("LEARNING_LOG_PATH", "data/learning_log.json")
-    timestamp = datetime.datetime.utcnow().isoformat()
+    timestamp = state.get("timestamp", datetime.datetime.utcnow().isoformat())
 
     event = {
         "transaction_id": state.get("transaction", {}).get("transaction_id"),
+        "risk_level": state.get("risk_level", "UNKNOWN"),
         "risk_score": round(state.get("risk_score", 0.0), 4),
-        "decision": state.get("decision", "UNKNOWN"),
+        "confidence": round(state.get("confidence", 0.0), 4),
         "risk_factors": state.get("risk_factors", []),
+        "reasoning": state.get("reasoning", ""),
         "signals": {
             "device": state.get("device_signals", {}),
             "mule_score": state.get("mule_score", 0.0),
         },
-        "hitl_triggered": state.get("hitl_triggered", False),
-        "hitl_action": state.get("hitl_action"),
-        "explanation": state.get("explanation"),
+        "hitl_required": state.get("hitl_required", False),
+        "facial_score": state.get("facial_score"),
+        "facial_passed": state.get("facial_passed"),
+        "voice_verified": state.get("voice_verified"),
+        "blocked": state.get("blocked", False),
+        "report": state.get("report"),
         "timestamp": timestamp,
     }
 
@@ -82,62 +101,90 @@ def memory_write_node(state: dict) -> dict:
         with open(log_path, "w") as f:
             json.dump(logs, f, indent=2)
     except Exception as e:
-        print(f"[MemoryWriter] Error escribiendo log: {e}")
+        print(f"[MemoryWriter] Error: {e}")
 
-    return {"timestamp": timestamp}
-
-
-# ─── Routing condicional ──────────────────────────────────────────────────────
-
-def _needs_hitl(state: dict) -> str:
-    """Decide si se requiere verificación HITL."""
-    decision = state.get("decision", "NO_FRAUD")
-    if decision in ("FRAUD", "POSSIBLE_FRAUD"):
-        return "hitl_verify"
-    return "xai_explain"
+    return {}
 
 
-# ─── Construcción del grafo ───────────────────────────────────────────────────
+# ─── Routing condicional ─────────────────────────────────────────────────────
+
+def _route_by_risk(state: dict) -> str:
+    """Después del LLM: ruta según risk_level."""
+    risk_level = state.get("risk_level", "BAJO")
+    if risk_level == "ALTO":
+        return "action"
+    elif risk_level == "MEDIO":
+        return "facial_recognition"
+    return "approve"
+
+
+def _route_after_facial(state: dict) -> str:
+    """Después del reconocimiento facial: pasa o no pasa."""
+    if state.get("facial_passed", False):
+        return "voice_bot"
+    return "action"
+
+
+def _route_after_voice(state: dict) -> str:
+    """Después del voice bot: confirma o no confirma."""
+    if state.get("voice_verified", False):
+        return "approve"
+    return "action"
+
+
+# ─── Construcción del grafo ──────────────────────────────────────────────────
 
 def build_fraud_graph() -> StateGraph:
-    """Construye y compila el grafo LangGraph de detección de fraude."""
+    """Construye y compila el grafo LangGraph de 3 nodos + HITL."""
     graph = StateGraph(AgentState)
 
     # Registrar nodos
-    graph.add_node("device_signals", device_signals_node)
-    graph.add_node("mule_scoring", mule_scoring_node)
-    graph.add_node("risk_engine", risk_engine_node)
-    graph.add_node("decision_policy", decision_policy_node)
-    graph.add_node("hitl_verify", hitl_node)
-    graph.add_node("xai_explain", xai_explain_node)
-    graph.add_node("memory_write", memory_write_node)
+    graph.add_node("enrichment", enrichment_node)              # Nodo A
+    graph.add_node("reasoning", reasoning_node)                # Nodo B (LLM)
+    graph.add_node("facial_recognition", facial_recognition_node)  # HITL
+    graph.add_node("voice_bot", voice_bot_node)                # HITL
+    graph.add_node("action", action_node)                      # Nodo C
+    graph.add_node("approve", approve_node)                    # Terminal OK
+    graph.add_node("memory_write", memory_write_node)          # Persistencia
 
-    # Edges desde START — paralelo
-    graph.add_edge(START, "device_signals")
-    graph.add_edge(START, "mule_scoring")
+    # Flujo principal
+    graph.add_edge(START, "enrichment")
+    graph.add_edge("enrichment", "reasoning")
 
-    # Convergencia en risk_engine
-    graph.add_edge("device_signals", "risk_engine")
-    graph.add_edge("mule_scoring", "risk_engine")
-
-    # Risk engine → decision
-    graph.add_edge("risk_engine", "decision_policy")
-
-    # Condicional: HITL o directamente a XAI
+    # Condicional después del LLM
     graph.add_conditional_edges(
-        "decision_policy",
-        _needs_hitl,
+        "reasoning",
+        _route_by_risk,
         {
-            "hitl_verify": "hitl_verify",
-            "xai_explain": "xai_explain",
+            "approve": "approve",
+            "action": "action",
+            "facial_recognition": "facial_recognition",
         },
     )
 
-    # HITL → XAI
-    graph.add_edge("hitl_verify", "xai_explain")
+    # Condicional después de facial recognition
+    graph.add_conditional_edges(
+        "facial_recognition",
+        _route_after_facial,
+        {
+            "voice_bot": "voice_bot",
+            "action": "action",
+        },
+    )
 
-    # XAI → Memory → END
-    graph.add_edge("xai_explain", "memory_write")
+    # Condicional después de voice bot
+    graph.add_conditional_edges(
+        "voice_bot",
+        _route_after_voice,
+        {
+            "approve": "approve",
+            "action": "action",
+        },
+    )
+
+    # Todos los terminales → memory_write → END
+    graph.add_edge("action", "memory_write")
+    graph.add_edge("approve", "memory_write")
     graph.add_edge("memory_write", END)
 
     return graph.compile()

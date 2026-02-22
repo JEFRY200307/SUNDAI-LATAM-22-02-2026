@@ -1,53 +1,58 @@
 """
-ROL 4 — HITL & Trust Flow
-Dispara acciones de verificación adicional según el nivel de riesgo.
+ROL 4 — HITL & Trust Flow — Verificación Voice Bot
+Simula el voice bot de verificación: preguntas sí/no al usuario.
+En producción se integraría con Twilio, AWS Connect, etc.
 """
+import hashlib
+import random
+
+from backend.hitl_trust.voice_bot import VOICE_BOT_SCRIPT
 
 
-def trigger_verification(decision: str) -> str:
+def simulate_voice_verification(user_id: str, transaction_id: str = "") -> dict:
     """
-    Determina y simula la acción de autenticación reforzada.
+    Simula la verificación por voice bot.
+
+    El voice bot hace preguntas de seguridad y el usuario confirma o rechaza.
+    Usa seed determinístico para resultados reproducibles.
 
     Args:
-        decision: "POSSIBLE_FRAUD" o "FRAUD"
+        user_id: Identificador del usuario.
+        transaction_id: ID de la transacción.
 
     Returns:
-        str: Descripción de la acción de verificación tomada.
+        dict con verified, confidence, y metadata.
     """
-    if decision == "FRAUD":
-        return _block_and_notify()
-    elif decision == "POSSIBLE_FRAUD":
-        return _step_up_auth()
-    return "NO_ACTION"
+    # Seed determinístico
+    seed_str = f"voice:{user_id}:{transaction_id}"
+    seed = int(hashlib.md5(seed_str.encode()).hexdigest(), 16) % 10000
+    rng = random.Random(seed)
 
+    # Simular respuesta del usuario (tendencia a confirmar: 65%)
+    verified = rng.random() < 0.65
+    confidence = round(rng.uniform(0.6, 0.95) if verified else rng.uniform(0.3, 0.6), 4)
 
-def _step_up_auth() -> str:
-    """Simula un Step-Up Authentication (OTP / biometría)."""
-    # TODO: Integrar con proveedor real de OTP o biometría
-    print("[HITL] Step-up auth activado — Enviando OTP al usuario.")
-    return "STEP_UP_AUTH_OTP"
+    print(f"[VoiceBot] User={user_id} Verified={verified} Confidence={confidence}")
+    print(VOICE_BOT_SCRIPT)
 
-
-def _block_and_notify() -> str:
-    """Bloquea la transacción y activa el voice bot."""
-    print("[HITL] Transacción BLOQUEADA — Activando voice bot.")
-    _trigger_voice_bot()
-    return "TRANSACTION_BLOCKED_VOICE_BOT"
-
-
-def _trigger_voice_bot():
-    """Importa y ejecuta el voice bot de forma inline."""
-    from backend.hitl_trust.voice_bot import run_voice_bot
-    run_voice_bot()
-
-
-# ─── LangGraph Node Wrapper ───────────────────────────────────────────────────
-
-def hitl_node(state: dict) -> dict:
-    """Nodo LangGraph: dispara verificación HITL según la decisión."""
-    decision = state.get("decision", "NO_FRAUD")
-    action = trigger_verification(decision=decision)
     return {
-        "hitl_triggered": True,
-        "hitl_action": action,
+        "verified": verified,
+        "confidence": confidence,
+        "method": "simulated_voice_bot",
+        "questions_asked": 3,
+    }
+
+
+# ─── LangGraph Node Wrapper ──────────────────────────────────────────────────
+
+def voice_bot_node(state: dict) -> dict:
+    """Nodo LangGraph: ejecuta verificación por voice bot."""
+    tx = state.get("transaction", {})
+    user_id = tx.get("sender_account", "unknown")
+    transaction_id = tx.get("transaction_id", "")
+
+    result = simulate_voice_verification(user_id, transaction_id)
+
+    return {
+        "voice_verified": result["verified"],
     }
