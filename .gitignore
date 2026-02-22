@@ -1,0 +1,45 @@
+# ─── Python ───────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# ─── Variables de entorno ─────────────────────────────
+.env
+*.env
+
+# ─── Node / Frontend ──────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/.cache/
+.npm
+
+# ─── Docker ───────────────────────────────────────────
+*.dockerignore
+
+# ─── IDEs y editores ──────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ─── Sistema operativo ────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Logs ─────────────────────────────────────────────
+*.log
+logs/
