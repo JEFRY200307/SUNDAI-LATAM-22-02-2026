@@ -41,6 +41,14 @@ class TransactionIntent(BaseModel):
     device_id: Optional[str] = None
     ip_address: Optional[str] = None
     user_agent: Optional[str] = None
+    # ── Señales de dispositivo (Rol 3) ────────────────────────────────────
+    is_emulator: bool = False
+    is_rooted: bool = False
+    anomalous_ip_flag: bool = False
+    # ── Señales de comportamiento (Rol 3) ─────────────────────────────────
+    interaction_time_ms: Optional[int] = None
+    navigation_steps: Optional[int] = None
+    historical_amounts: Optional[list[float]] = None
 
 
 class TransactionResult(BaseModel):
@@ -66,6 +74,13 @@ async def analyze_transaction(intent: TransactionIntent):
         device_id=intent.device_id,
         ip_address=intent.ip_address,
         user_agent=intent.user_agent,
+        is_emulator=intent.is_emulator,
+        is_rooted=intent.is_rooted,
+        anomalous_ip=intent.anomalous_ip_flag,
+        interaction_time_ms=intent.interaction_time_ms,
+        navigation_steps=intent.navigation_steps,
+        amount=intent.amount,
+        historical_amounts=intent.historical_amounts,
     )
 
     # 2. Score de mula del destinatario (Rol 2)
