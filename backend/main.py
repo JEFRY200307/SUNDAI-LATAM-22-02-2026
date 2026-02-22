@@ -1,12 +1,17 @@
 """
+<<<<<<< HEAD
 Backend principal — Orquestador del Agente Anti-Fraude (3 Nodos)
 Rol 5: UI Dashboard & Orchestration
 
 10 endpoints orquestados via LangGraph.
 Nodo A (Enriquecimiento) → Nodo B (Razonamiento LLM) → Nodo C (Acción)
+=======
+Backend principal — Orquestador del Agente Anti-Fraude
+>>>>>>> behavioral-device
 """
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+<<<<<<< HEAD
 from dotenv import load_dotenv
 import json, os, datetime
 
@@ -26,6 +31,13 @@ app = FastAPI(
     title="Anti-Fraud Agent API",
     description="Agente inteligente de detección de fraude con 3 nodos LangGraph — SUNDAI LATAM 2026",
     version="3.0.0",
+=======
+
+app = FastAPI(
+    title="Anti-Fraud Agent API",
+    description="Orquestador del agente inteligente de deteccion de fraude — SUNDAI LATAM 2026",
+    version="1.0.0",
+>>>>>>> behavioral-device
 )
 
 app.add_middleware(
@@ -36,9 +48,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-LOG_PATH = os.getenv("LEARNING_LOG_PATH", "data/learning_log.json")
+
+@app.get("/test-inline")
+async def test_inline():
+    return {"msg": "inline works"}
 
 
+<<<<<<< HEAD
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def _read_log() -> list[dict]:
@@ -47,8 +63,19 @@ def _read_log() -> list[dict]:
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return []
+=======
+# Now try including routers one by one to find which one breaks
+from backend.routes.health import router as health_router
+app.include_router(health_router, tags=["Utilities"])
 
+from backend.routes.graph import router as graph_router
+app.include_router(graph_router, tags=["Graph"])
+>>>>>>> behavioral-device
 
+from backend.routes.modules import router as modules_router
+app.include_router(modules_router, tags=["Modules"])
+
+<<<<<<< HEAD
 def _run_pipeline(intent: TransactionIntent) -> TransactionResult:
     """Ejecuta el grafo LangGraph completo y devuelve TransactionResult."""
     initial_state = {
@@ -275,3 +302,7 @@ async def submit_feedback(payload: FeedbackPayload):
         "transaction_id": payload.transaction_id,
         "correct_decision": payload.correct_decision,
     }
+=======
+from backend.routes.analyze import router as analyze_router
+app.include_router(analyze_router, tags=["Analyze"])
+>>>>>>> behavioral-device
