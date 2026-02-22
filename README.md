@@ -192,6 +192,9 @@ docker run -p 8000:8000 antifraud-backend
 Proyecto desarrollado en el marco del Hackathon **SUNDAI LATAM · 22 de febrero de 2026**.
 
 
+# Flujo de TrustFlow (Human In The Loop)
+
+```mermaid
 graph TD
     %% Nodos
     User((Usuario))
@@ -224,4 +227,6 @@ graph TD
     style HITL fill:#bfdbfe,stroke:#3b82f6,color:#1e3a8a,stroke-width:3px
     style TxRechazada fill:#fecaca,stroke:#ef4444,color:#7f1d1d
     style TxExitosa fill:#bbf7d0,stroke:#22c55e,color:#14532d
+```
+
 
