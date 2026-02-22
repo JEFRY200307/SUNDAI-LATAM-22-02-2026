@@ -1,0 +1,46 @@
+
+services:
+
+  # ────────────────────────────────────────────────────────────────
+  # BACKEND — FastAPI (usa backend/Dockerfile)
+  # ────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: antifraud-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data          # Persiste el learning_log.json en tu máquina
+    environment:
+      - APP_ENV=development
+      - RISK_THRESHOLD_FRAUD=0.75
+      - RISK_THRESHOLD_POSSIBLE=0.45
+      - LEARNING_LOG_PATH=data/learning_log.json
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ────────────────────────────────────────────────────────────────
+  # FRONTEND — React + Vite (sin Dockerfile propio, usa imagen Node)
+  # ────────────────────────────────────────────────────────────────
+  frontend:
+    image: node:20-alpine
+    container_name: antifraud-frontend
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./frontend:/app            # Monta el código fuente directamente
+      - /app/node_modules          # Evita sobreescribir node_modules del host
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      backend:
+        condition: service_healthy
